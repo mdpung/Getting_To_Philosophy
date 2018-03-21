@@ -7,9 +7,9 @@ public class Crawler {
     /**
      * Constants
      */
-    static final String P_TAG = "<p>";
-    static final String END_TAG = "</p>";
-    static final String A_TAG = "<a";
+    private static final String P_TAG = "<p>";
+    private static final String END_TAG = "</p>";
+    private static final String A_TAG = "<a";
 
     /**
      * Instance Variables
