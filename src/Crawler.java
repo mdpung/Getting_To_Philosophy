@@ -62,24 +62,36 @@ public class Crawler {
             url = new URL(webPage.getURL());
             BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
             String line;
-            WebPage article;
+            WebPage article = getNextWebPage(br);
+            if (article != null) return article;
 
-            // Keep searching while there are lines in the webpage
-            while ((line = br.readLine()) != null) {
-                // Fetches first non-visited article page name
-                article = getArticle(line);
 
-                // Checks if such and article page name exists
-                if (article != null) {
-                    // Print out name
-                    System.out.println(article.getPageName());
-                    return article;
-                }
-            }
         } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private WebPage getNextWebPage(BufferedReader br) throws IOException {
+        String line;
+        WebPage article;// Keep searching while there are lines in the webpage
+        while ((line = br.readLine()) != null) {
+            // Fetches first non-visited article page name
+            article = getArticle(line);
+
+            // Checks if such and article page name exists
+            if (ifExists(article)) return article;
+        }
+        return null;
+    }
+
+    private boolean ifExists(WebPage article) {
+        if (article != null) {
+            // Print out name
+            System.out.println(article.getPageName());
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -102,11 +114,7 @@ public class Crawler {
 
                 // Keep track if we are in parenthesis or not
                 for (int i = 0; i < sub.length(); i++) {
-                    if (sub.charAt(i) == '(') {
-                        numParenthesis++;
-                    } else if (sub.charAt(i) == ')') {
-                        numParenthesis--;
-                    }
+                    numParenthesis = getNumParenthesis(numParenthesis, sub, i);
                 }
 
                 // Checks that we are not in any parenthesis
@@ -118,25 +126,43 @@ public class Crawler {
                         String modifiedString = modifyString(s.next());
 
                         // Checks to see the article is a valid page
-                        if (!modifiedString.contains("#")
-                                && !modifiedString.contains(":") && !modifiedString.contains(".org")) {
-                            int stringHashCode = modifiedString.hashCode();
-
-                            // Checks if article name is not already visited
-                            if (!hashMap.containsKey(stringHashCode)) {
-                                // Adds page name to hash map so we know it has already been visited
-                                WebPage page = new WebPage(modifiedString);
-                                addPage(stringHashCode, page);
-                                return page;
-                            }
-                        }
-
+                        WebPage page = getWebPage(modifiedString);
+                        if (page != null) return page;
                     }
                 }
             }
             s.close();
         }
         return null;
+    }
+
+    private WebPage getWebPage(String modifiedString) {
+        if (isValidArticle(modifiedString)) {
+            int stringHashCode = modifiedString.hashCode();
+
+            // Checks if article name is not already visited
+            if (!hashMap.containsKey(stringHashCode)) {
+                // Adds page name to hash map so we know it has already been visited
+                WebPage page = new WebPage(modifiedString);
+                addPage(stringHashCode, page);
+                return page;
+            }
+        }
+        return null;
+    }
+
+    private int getNumParenthesis(int numParenthesis, String sub, int i) {
+        if (sub.charAt(i) == '(') {
+            numParenthesis++;
+        } else if (sub.charAt(i) == ')') {
+            numParenthesis--;
+        }
+        return numParenthesis;
+    }
+
+    private boolean isValidArticle(String modifiedString) {
+        return !modifiedString.contains("#")
+                && !modifiedString.contains(":") && !modifiedString.contains(".org");
     }
 
 
