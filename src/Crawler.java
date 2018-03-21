@@ -7,8 +7,6 @@ public class Crawler {
     /**
      * Constants
      */
-    private static final String DESTINATION = "https://en.wikipedia.org/wiki/Philosophy";
-    private static final String BASE = "https://en.wikipedia.org/wiki/";
     static final String P_TAG = "<p>";
     static final String END_TAG = "</p>";
     static final String A_TAG = "<a";
@@ -16,15 +14,15 @@ public class Crawler {
     /**
      * Instance Variables
      */
-    private HashMap<Integer, String> hashMap;
-    private String start;
+    private HashMap<Integer, WebPage> hashMap;
+    private WebPage start;
 
     /**
      * Constructor
      * @param page
      */
     public Crawler(String page) {
-        this.start = page;
+        this.start = new WebPage(page);
         this.hashMap = new HashMap<>();
     }
 
@@ -33,7 +31,7 @@ public class Crawler {
      * @param hashCode
      * @param page
      */
-    private void addPage(int hashCode, String page) {
+    private void addPage(int hashCode, WebPage page) {
         hashMap.put(hashCode, page);
     }
 
@@ -42,11 +40,11 @@ public class Crawler {
      * start location in constructor.
      */
     public void findPhilosophy() {
-        String tempPage = start;
-        System.out.println(tempPage);
+        WebPage tempPage = start;
+        System.out.println(tempPage.getPageName());
 
         // Keep advancing to the first article link till we find 'Philosophy'
-        while(!tempPage.equals("Philosophy")) {
+        while(!tempPage.getPageName().equals("Philosophy")) {
             tempPage = scrapeWebPage(tempPage);
         }
         System.out.println("Done");
@@ -58,13 +56,13 @@ public class Crawler {
      * @param webPage
      * @return First non-visited article name
      */
-    private String scrapeWebPage(String webPage) {
+    private WebPage scrapeWebPage(WebPage webPage) {
         URL url;
         try {
-            url = new URL(BASE + webPage);
+            url = new URL(webPage.getURL());
             BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
             String line;
-            String article;
+            WebPage article;
 
             // Keep searching while there are lines in the webpage
             while ((line = br.readLine()) != null) {
@@ -74,7 +72,7 @@ public class Crawler {
                 // Checks if such and article page name exists
                 if (article != null) {
                     // Print out name
-                    System.out.println(article);
+                    System.out.println(article.getPageName());
                     return article;
                 }
             }
@@ -89,7 +87,7 @@ public class Crawler {
      * @param line
      * @return first non-visited article page name
      */
-    private String getArticle(String line) {
+    private WebPage getArticle(String line) {
         Scanner s;
 
         // We advance if the line contains opening '<p>' and closing '</p>' paragraph tags
@@ -127,8 +125,9 @@ public class Crawler {
                             // Checks if article name is not already visited
                             if (!hashMap.containsKey(stringHashCode)) {
                                 // Adds page name to hash map so we know it has already been visited
-                                addPage(stringHashCode, modifiedString);
-                                return modifiedString;
+                                WebPage page = new WebPage(modifiedString);
+                                addPage(stringHashCode, page);
+                                return page;
                             }
                         }
 
@@ -143,9 +142,9 @@ public class Crawler {
 
     //Cuts out href="\wiki" from the substring
     private String modifyString(String s) {
-        String modifedString;
-        modifedString = s.substring(12, s.length() - 1);
+        String modifiedString;
+        modifiedString = s.substring(12, s.length() - 1);
 
-        return modifedString;
+        return modifiedString;
     }
 }
