@@ -15,15 +15,17 @@ public class Crawler {
      * Instance Variables
      */
     private HashMap<Integer, WebPage> hashMap;
+    PrintWriter pw;
     private WebPage start;
 
     /**
      * Constructor
      * @param page
      */
-    public Crawler(String page) {
+    public Crawler(String page) throws FileNotFoundException {
         this.start = new WebPage(page);
         this.hashMap = new HashMap<>();
+        pw = new PrintWriter("PathToPhilosophy.txt");
     }
 
     /**
@@ -41,13 +43,17 @@ public class Crawler {
      */
     public void findPhilosophy() {
         WebPage tempPage = start;
-        System.out.println(tempPage.getPageName());
+
+        String pageName = tempPage.getPageName();
+//        System.out.println(pageName);
+        pw.println(pageName);
 
         // Keep advancing to the first article link till we find 'Philosophy'
         while(!tempPage.getPageName().equals("Philosophy")) {
             tempPage = scrapeWebPage(tempPage);
         }
         System.out.println("Done");
+        pw.close();
     }
 
     /**
@@ -62,35 +68,37 @@ public class Crawler {
             url = new URL(webPage.getURL());
             BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
             String line;
-            WebPage article = getNextWebPage(br);
-            if (article != null) return article;
+            WebPage article;
+            // Keep searching while there are lines in the webpage
+            while ((line = br.readLine()) != null) {
+                // Fetches first non-visited article page name
+                article = getArticle(line);
 
-
+                // Checks if such and article page name exists
+                if (ifWebPageExists(article)) return article;
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    private WebPage getNextWebPage(BufferedReader br) throws IOException {
-        String line;
-        WebPage article;// Keep searching while there are lines in the webpage
-        while ((line = br.readLine()) != null) {
-            // Fetches first non-visited article page name
-            article = getArticle(line);
+    /**
+     * Checks if the article is null or not
+     * @param article
+     * @return
+     *      null if the WebPage was found, the WebPage otherwise
+     */
+    private boolean ifWebPageExists(WebPage article) throws FileNotFoundException {
 
-            // Checks if such and article page name exists
-            if (ifExists(article)) return article;
-        }
-        return null;
-    }
-
-    private boolean ifExists(WebPage article) {
         if (article != null) {
             // Print out name
-            System.out.println(article.getPageName());
+            String pageName = article.getPageName();
+//            System.out.println(pageName);
+            pw.println(pageName);
             return true;
         }
+
         return false;
     }
 
@@ -136,6 +144,11 @@ public class Crawler {
         return null;
     }
 
+    /**
+     *
+     * @param modifiedString
+     * @return
+     */
     private WebPage getWebPage(String modifiedString) {
         if (isValidArticle(modifiedString)) {
             int stringHashCode = modifiedString.hashCode();
@@ -151,6 +164,14 @@ public class Crawler {
         return null;
     }
 
+    /**
+     * Gets number of pair parenthesis it is in
+     * @param numParenthesis
+     * @param sub
+     * @param i
+     * @return
+     *      number of pair parenthesis it is in
+     */
     private int getNumParenthesis(int numParenthesis, String sub, int i) {
         if (sub.charAt(i) == '(') {
             numParenthesis++;
@@ -160,13 +181,23 @@ public class Crawler {
         return numParenthesis;
     }
 
+    /**
+     * Checks if link is not to an image or section of a page or other link
+     * @param modifiedString
+     * @return
+     */
     private boolean isValidArticle(String modifiedString) {
         return !modifiedString.contains("#")
                 && !modifiedString.contains(":") && !modifiedString.contains(".org");
     }
 
 
-    //Cuts out href="\wiki" from the substring
+    /**
+     * Cuts out href="\wiki" from the substring
+     * @param s
+     * @return
+     *      String after parsing
+     */
     private String modifyString(String s) {
         String modifiedString;
         modifiedString = s.substring(12, s.length() - 1);

@@ -1,6 +1,8 @@
+import java.io.FileNotFoundException;
+
 public class Test {
-    public static void main(String[] args) {
-        Crawler crawl = new Crawler("Logic");
+    public static void main(String[] args) throws FileNotFoundException {
+        Crawler crawl = new Crawler("food");
         crawl.findPhilosophy();
     }
 }
